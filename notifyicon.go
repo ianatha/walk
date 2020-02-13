@@ -36,33 +36,11 @@ func notifyIconWndProc(hwnd win.HWND, msg uint32, wParam, lParam uintptr) (resul
 		win.SendMessage(hwnd, msg, wParam, win.WM_CONTEXTMENU)
 
 	case win.WM_CONTEXTMENU:
-		if ni.contextMenu.Actions().Len() == 0 {
+		if !ni.ShowContextMenu() {
 			break
+		} else {
+			return 0
 		}
-
-		win.SetForegroundWindow(hwnd)
-
-		var p win.POINT
-		if !win.GetCursorPos(&p) {
-			lastError("GetCursorPos")
-		}
-
-		ni.applyDPI()
-
-		actionId := uint16(win.TrackPopupMenuEx(
-			ni.contextMenu.hMenu,
-			win.TPM_NOANIMATION|win.TPM_RETURNCMD,
-			p.X,
-			p.Y,
-			hwnd,
-			nil))
-		if actionId != 0 {
-			if action, ok := actionsById[actionId]; ok {
-				action.raiseTriggered()
-			}
-		}
-
-		return 0
 	case win.NIN_BALLOONUSERCLICK:
 		ni.messageClickedPublisher.Publish()
 	}
@@ -130,6 +108,36 @@ func NewNotifyIcon(form Form) (*NotifyIcon, error) {
 
 	notifyIcons[ni] = true
 	return ni, nil
+}
+
+func (ni *NotifyIcon) ShowContextMenu() bool {
+	if ni.contextMenu.Actions().Len() == 0 {
+		return false
+	}
+
+	win.SetForegroundWindow(ni.hWnd)
+
+	var p win.POINT
+	if !win.GetCursorPos(&p) {
+		lastError("GetCursorPos")
+	}
+
+	ni.applyDPI()
+
+	actionId := uint16(win.TrackPopupMenuEx(
+		ni.contextMenu.hMenu,
+		win.TPM_NOANIMATION|win.TPM_RETURNCMD,
+		p.X,
+		p.Y,
+		ni.hWnd,
+		nil))
+	if actionId != 0 {
+		if action, ok := actionsById[actionId]; ok {
+			action.raiseTriggered()
+		}
+	}
+
+	return true
 }
 
 func (ni *NotifyIcon) DPI() int {
