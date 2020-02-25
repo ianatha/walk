@@ -7,7 +7,7 @@
 package declarative
 
 import (
-	"github.com/lxn/walk"
+	"github.com/ianatha/walk"
 )
 
 type ToolBarButtonStyle int

@@ -8,10 +8,8 @@ package declarative
 
 import (
 	"errors"
-)
 
-import (
-	"github.com/lxn/walk"
+	"github.com/ianatha/walk"
 )
 
 type ComboBox struct {
